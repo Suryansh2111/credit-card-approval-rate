@@ -1,5 +1,55 @@
-# credit-card-approval-rate
-The dataset used for this project was obtained from Kaggle, the data set contains credit application records where each row represents a unique customer. The primary objective was to identify key variables influencing the likelihood of credit approval. The target variable name is Status, it indicates whether an application was approved (1) or denied (0). The identified key variables and the selected model could potentially be used to streamline pre-approved credit application processes. Initial data exploration revealed that the dataset is highly imbalanced, with few observations of credit card denials. This imbalance posed a risk of misleading model interpretations and certain variables could potentially appear statistically significant due to limited variation among rejected applicants. Other effects of highly imbalanced data include biased selection of variables and model overfit. To mitigate this, both predictive performance and business relevance were taken into consideration to select the final variables in the model.
-The dataset contains twenty-seven thousand observations and includes features such as gender, marital status, family size, assets, income, debt, education, job type, years of employment, and indicators of asset ownership. Business intuition and industry practice indicates that debt levels, income type and job type are considered key variables in determining credit approval. The major limitation of this data set is the lack of enough rejected applicants with over 99% of total rows resulting in Approval. Another technique we used to solve for the imbalance data was Synthetic Minority Over-sampling Technique (SMOTE). Unlike simply duplicating rows, SMOTE leveraged distance-based measures to generate synthetic data by interpolating between closely related rows. This ensured better representation of the minority class without introducing redundancy into the dataset. Other problems included the lack of other key variables such as FICO score, used in industry practice to determine credit approval. Each variable underwent thorough preprocessing using Python to ensure the data is ready for modeling. One key step in processing the data was to use one-hot-encoding to transform categorical variables into binary indicators. The variable processing included: 1) Evaluation for data completeness and outliers, 2) Assessment of categorical variable cardinality, 3) Variable clustering to group similar categories by risk level and simplify model interpretation.
-To select candidate variables, correlations against the target variable were performed. In addition, the decision tree was used as a validating step to identify key variables based on the decision node splits. Variable importance for the Neural Network model indicates that Total Good Debt is the most influential variable, contributing over 40% of the model’s predictive power. Education Type and Job Type are the next most important variables in the model with 20% predictive power respectively. Multiple model types were tested and assessed using metrics like accuracy, lift, and AUC across training, validation, and test partitions.
-The Neural Network model was selected as the final model due to its strong and consistent performance across all data partitions and different thresholds.The model achieved a total accuracy of 99% and an accuracy of class 1 (approvals) of 99% in both the validation and testing datasets. For class 0 (rejections), the model demonstrated an accuracy of 87%. Analyzing class 0 accuracy was critical to minimize false negatives, given that most models already exhibited high accuracy for the approval class. Additionally, the model achieved a lift of 1.044 and an AUC exceeding 99%. The performance metrics for the model suggest perfect discrimination power which is highly influenced by the low number of rejected observations. The selected model variables emphasize business intuition and statistically significant relationships with the target variable to ensure the model aligns with the objectives and intended use. Due to the low number of rejected applicants in the data set, it is recommended that the model undergoes periodic retraining when new data becomes available for applicants not approved. A feedback loop would also help to allow auditors to reject or accept model results, improving performance over time. Moreover, the selected model should be used in conjunction with human intervention based on certain risk guidelines.
+# Credit Card Approval Prediction
+
+**Author:** Suryansh Mishra · [GitHub](https://github.com/Suryansh2111) · [LinkedIn](https://www.linkedin.com/in/suryansh-mishra-bb3879339/)
+
+## Problem
+
+Card issuers want to approve good applicants quickly while catching the ones who should be denied. This project identifies the variables that drive approval and builds a model to pre-screen applications, on extremely imbalanced data where only about 1 in 200 applicants is denied.
+
+## Data
+
+[Kaggle Application Data](https://www.kaggle.com/datasets/caesarmario/application-data): after cleaning, **25,128 applicants**, each with gender, car and property ownership, children, income and income type, education, family status, housing, job title, family size, age, years working, and total good and bad debt.
+
+Target `Status`: 1 = approved (25,007), 0 = denied (**121, 0.48%**). A model that approves everyone is already 99.5% accurate, so models were judged on how many denials they caught.
+
+## Approach
+
+- Data quality checks: completeness, outliers, and how many distinct values each categorical column has.
+- Binned numeric variables (income, age, years working, family size, good debt).
+- Grouped high-cardinality categories into risk clusters by denial rate. For example, "Incomplete higher" and "Lower secondary" education form a high-risk cluster; "Academic degree" and "Secondary special" form a low-risk cluster.
+- One-hot encoded the clusters; balanced the training data with SMOTE.
+- Selected variables using correlation with the target, decision-tree splits and business sense.
+- Compared 8 models across training, validation and test partitions: Logistic Regression, Linear Discriminant Analysis, Decision Tree, Boosted Tree, Bootstrap Forest, Naive Bayes, K-Nearest Neighbors and a Neural Network.
+
+## Results
+
+| Model | Denials caught (class 0) | Approvals correct (class 1) |
+| --- | --- | --- |
+| **Neural Network (selected)** | **87%** | **99%** |
+| Naive Bayes | 97% | 55% |
+| Boosted Tree | about 50% | 99%+ |
+| K-Nearest Neighbors | 33% | 100% |
+| Decision Tree | 16-22% | 99%+ |
+
+The neural network was chosen because it caught most denials without rejecting good customers, and performed the same on training, validation and test data. Naive Bayes caught more denials but rejected almost half of good applicants.
+
+**Top drivers** (neural network): total good debt (about 40% of importance), education type and job title (about 20% each), then total debt. In the Bootstrap Forest, total bad debt and total good debt ranked highest.
+
+## Recommendations
+
+- Auto-approve high-confidence applicants; send those below a set approval probability to a human underwriter.
+- Avoid targeting applicants with both high bad debt and high good debt; target high-income applicants with academic degrees for offers.
+- Collect more data on denied applicants and retrain regularly; log underwriter decisions as new labels.
+
+## Limitations
+
+- Only 121 denials, so recall on denials moves several points per misclassified applicant; treat results as directional.
+- No credit score (FICO) in the data, which real lenders rely on.
+- Gender, age and family status are restricted in US lending (ECOA); a production model would exclude or test them for disparate impact.
+
+## Files
+
+- `Credit_Card_Approval_Presentation.pptx`: full analysis, model comparison and recommendations
+- `Application_Data_Transformed.xlsx`: cleaned data with binned and clustered variables
+
+**Tools:** JMP Pro (model comparison), Python (preprocessing, one-hot encoding, SMOTE)
